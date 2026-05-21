@@ -1,0 +1,5 @@
+sample_id,current_badness,pdp_resistance_badness,eis_resistance_badness,film_nonideality_badness,oxide_defect_proxy_badness,peroxide_factor,cu_factor
+S1_316L_NaCl,0.0,0.0,0.0,0.0,0.0,0,0.0
+S2_316L_Cu_NaCl,0.48520970430298643,0.738665308201732,0.2993240658079327,0.25,0.1185185185185185,0,1.0
+S3_316L_NaCl_H2O2,0.6814999878488033,0.8492103922567499,0.9503889809973217,0.0,0.2962962962962963,1,0.0
+S4_316L_Cu_NaCl_H2O2,1.0,1.0,1.0,1.0,1.0,1,1.0
