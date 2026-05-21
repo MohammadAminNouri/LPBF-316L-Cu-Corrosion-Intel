@@ -1,0 +1,100 @@
+name: Check Streamlit Dashboard
+
+on:
+  push:
+    branches: ["main", "master"]
+  pull_request:
+    branches: ["main", "master"]
+  workflow_dispatch:
+
+jobs:
+  streamlit-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Upgrade pip
+        run: |
+          python -m pip install --upgrade pip
+
+      - name: Install dependencies
+        run: |
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          else
+            pip install streamlit pandas numpy scikit-learn matplotlib plotly
+          fi
+
+      - name: Check Python syntax
+        run: |
+          python -m py_compile app.py
+          if [ -d src ]; then
+            find src -name "*.py" -print -exec python -m py_compile {} \;
+          fi
+
+      - name: Check required project files
+        run: |
+          test -f app.py
+          test -f README.md
+          test -f data/processed/paper_extracted_corrosion_features.csv
+
+      - name: Import main packages
+        run: |
+          python - <<'PY'
+          import pandas
+          import numpy
+          import sklearn
+          import matplotlib
+          import plotly
+          import streamlit
+          print("All main packages imported successfully.")
+          PY
+
+      - name: Validate dataset
+        run: |
+          python - <<'PY'
+          import pandas as pd
+
+          path = "data/processed/paper_extracted_corrosion_features.csv"
+          df = pd.read_csv(path)
+
+          required_columns = [
+              "sample_id",
+              "alloy",
+              "medium",
+              "Ecorr_V_AgAgCl",
+              "Icorr_uA_cm2",
+              "Rp_polarization_kohm_cm2",
+              "Rp_EIS_kohm_cm2",
+              "severity_index"
+          ]
+
+          missing = [col for col in required_columns if col not in df.columns]
+
+          if missing:
+              raise ValueError(f"Missing required columns: {missing}")
+
+          if df.empty:
+              raise ValueError("Dataset is empty.")
+
+          print("Dataset validation passed.")
+          print(df.head())
+          PY
+
+      - name: Streamlit smoke test
+        run: |
+          streamlit run app.py \
+            --server.headless true \
+            --server.port 8501 \
+            --browser.gatherUsageStats false &
+
+          sleep 12
+
+          curl --fail http://localhost:8501
